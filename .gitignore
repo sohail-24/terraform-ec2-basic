@@ -1,6 +1,16 @@
+# Terraform local state
 .terraform/
-terraform.tfstate*
+terraform.tfstate
+terraform.tfstate.*
+*.backup
+
+# SSH keys
 *.pem
 *.key
-generated_key.pem
+
+# OS files
+.DS_Store
+
+# Optional: logs
+*.log
 

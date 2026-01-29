@@ -1,3 +1,18 @@
+
+# Fetch default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Fetch subnets from default VPC
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+
 resource "tls_private_key" "ssh_key" {
   count     = var.enable_ssh ? 1 : 0
   algorithm = "ED25519"
@@ -50,6 +65,8 @@ resource "aws_security_group" "ec2_sg" {
 resource "aws_instance" "ec2" {
   ami           = var.ami_id
   instance_type = var.instance_type
+  
+  subnet_id = data.aws_subnets.default.ids[0]
 
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
@@ -67,8 +84,8 @@ resource "aws_instance" "ec2" {
     ManagedBy   = "Terraform"
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
+#  lifecycle {
+#    prevent_destroy = true
+#  }
 }
 
