@@ -1,5 +1,7 @@
 aws_region    = "ap-south-1"
-instance_type = "t2.micro"
-key_name      = "my-keypair"
-ami_id        = "ami-0f58b397bc5c1f2e8"
+instance_type = "t3.small"
+ami_id        = "ami-0ff5003538b60d5ec"
+instance_name = "prod-ready-ec2"
+enable_ssh    = true
+volume_size = 30
 

@@ -8,13 +8,23 @@ variable "instance_type" {
   type        = string
 }
 
-variable "key_name" {
-  description = "SSH key pair name"
-  type        = string
-}
-
 variable "ami_id" {
   description = "AMI ID"
   type        = string
+}
+
+variable "enable_ssh" {
+  description = "Enable SSH access (false in production)"
+  type        = bool
+  default     = false
+}
+
+variable "instance_name" {
+  description = "EC2 Name tag"
+  type        = string
+}
+variable "volume_size" {
+  description = "Root volume size in GB"
+  type        = number
 }
 
