@@ -122,6 +122,7 @@ Those belong to:
 ## 🪣 S3 Bucket Naming (Important Concept)
 
 S3 bucket names are **globally unique**.
+You do **NOT** create a bucket per user
 
 ### ❓ What if multiple users work together?
 
@@ -129,7 +130,7 @@ S3 bucket names are **globally unique**.
 
 * ONE shared bucket
 * ONE DynamoDB table
-* Separate state files using keys or workspaces
+* Multiple environments via **keys or workspaces**
 
 Example:
 
@@ -185,6 +186,8 @@ aws sts get-caller-identity
 
 ### ✅ Create ONCE per account/environment
 
+Terraform will reuse them forever.
+
 #### S3 Bucket (once)
 
 ```bash
@@ -194,7 +197,15 @@ aws s3api create-bucket \
   --create-bucket-configuration LocationConstraint=ap-south-1
 ```
 
-#### DynamoDB Table (once)
+```bash
+Enable versioning (VERY IMPORTANT):
+
+aws s3api put-bucket-versioning \
+  --bucket sohail-terraform-state-prod \
+  --versioning-configuration Status=Enabled
+```
+
+#### ✅ Create DynamoDB Lock Table (ONE TIME)
 
 ```bash
 aws dynamodb create-table \
@@ -215,6 +226,9 @@ Terraform then **automatically uses them**.
 
 ```bash
 git clone https://github.com/sohail-24/terraform-ec2-basic.git
+```
+
+```bash
 cd terraform-ec2-basic
 ```
 
@@ -264,7 +278,7 @@ aws ssm start-session --target <instance-id>
 
 ---
 
-## 🧹 Cleanup
+## 🧹 Cleanup (IMPORTANT)
 
 ### Destroy Infrastructure
 
@@ -291,10 +305,30 @@ terraform destroy
 
 ⚠️ **Danger zone – do this only if you are DONE**
 
-```bash
-aws s3 rm s3://sohail-terraform-state-prod/terraform/terraform.tfstate
-aws s3 rb s3://sohail-terraform-state-prod --force
+Because S3 versioning is enabled, **you must delete ALL versions.**
 
+**Step 1: Delete ALL object versions**
+
+```bash
+aws s3api list-object-versions \
+ --bucket sohail-terraform-state-prod \
+ --query '{Objects: Versions[].{Key:Key,VersionId:VersionId}}' \
+ --output json > versions.json
+```
+
+```bash
+aws s3api delete-objects \
+  --bucket sohail-terraform-state-prod \
+  --delete file://versions.json
+```
+**Step 2: Delete bucket**
+
+```bash
+aws s3 rb s3://sohail-terraform-state-prod
+```
+**Step 3: Delete DynamoDB table**
+
+```bash
 aws dynamodb delete-table \
   --table-name terraform-locks \
   --region ap-south-1
